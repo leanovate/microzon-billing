@@ -25,9 +25,6 @@ targetCompatibility = '1.8'
 group = "de.leanovate.microzon"
 version =  '0.1.0'
 
-jar {
-    baseName = 'billing'
-}
 
 repositories {
     mavenCentral()
