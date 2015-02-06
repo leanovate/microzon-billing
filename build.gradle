@@ -83,7 +83,7 @@ task "dist-docker"(type:Copy) {
 
 model {
     tasks.generatePomFileForMavenJavaPublication {
-        dependsOn build
+        dependsOn oneJar
     }
 }
 
