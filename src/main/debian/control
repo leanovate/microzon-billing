@@ -1,0 +1,9 @@
+Package: microzon-billing
+Version: @version@
+Section: misc
+Priority: extra
+Architecture: all
+Depends: supervisor, oracle-java8-installer
+Maintainer: Bodo Junglas <landru@untoldwind.net>
+Homepage: http://github.com/leanovate/microzon
+Description: Billing service

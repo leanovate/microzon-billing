@@ -1,3 +1,4 @@
+import org.apache.tools.ant.filters.ReplaceTokens
 
 buildscript {
     repositories {
@@ -8,26 +9,17 @@ buildscript {
     }
 }
 
-plugins {
-    id "com.jfrog.bintray" version "1.0"
-}
-
 apply plugin: 'java'
 apply plugin: 'gradle-one-jar'
 apply plugin: 'application'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
-apply plugin: 'maven-publish'
 
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
 group = "de.leanovate.microzon"
 version =  '0.1.0'
-
-jar {
-    baseName = 'billing'
-}
 
 repositories {
     mavenCentral()
@@ -81,29 +73,27 @@ task "dist-docker"(type:Copy) {
     into distDir
 }
 
-model {
-    tasks.generatePomFileForMavenJavaPublication {
-        dependsOn build
+task debian(dependsOn: oneJar) << {
+    copy {
+        from 'src/main/debian'
+        into 'build/deb/DEBIAN'
+        filter(ReplaceTokens, tokens: [version: "$version-${System.env.TRAVIS_BUILD_NUMBER}".toString()])
     }
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifactId "billing"
-            artifact oneJar.archivePath
-        }
+    copy {
+        from oneJar.archivePath
+        into 'build/deb/opt/billing'
+        rename(/microzon-billing.*.jar/, 'billing.jar')
     }
-}
-
-bintray {
-    user = "$System.env.BINTRAY_USER"
-    key = "$System.env.BINTRAY_KEY"
-    publications = ['mavenJava']
-    dryRun = false
-    publish = true
-    pkg {
-        repo = 'maven'
-        name = 'microzon'
+    copy {
+        from 'src/main/supervisor'
+        into 'build/deb/etc/supervisor/conf.d'
+    }
+    exec {
+        executable '/usr/bin/fakeroot'
+        args '/usr/bin/dpkg-deb', "-b", "build/deb", 'build/microzon-billing.deb'
+    }
+    exec {
+        executable '/usr/bin/curl'
+        args "-X", "PUT", "-T", 'build/microzon-billing.deb', "-u${System.env.BINTRAY_USER}:${System.env.BINTRAY_KEY}", "https://api.bintray.com/content/untoldwind/deb/microzon/$version/pool/main/m/microzon/microzon-billing_$version-${System.env.TRAVIS_BUILD_NUMBER}_all.deb;deb_distribution=trusty;deb_component=main;deb_architecture=all?publish=1"
     }
 }
