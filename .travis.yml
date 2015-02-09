@@ -1,4 +1,8 @@
+sudo: false
 language: java
 jdk:
 - oraclejdk8
 script: "./gradlew debian"
+cache:
+  directories:
+    - $HOME/.gradle
